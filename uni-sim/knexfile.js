@@ -1,10 +1,11 @@
+require('dotenv').config()
 module.exports = {
     development: {
       client: 'pg',
       connection: {
         host: 'localhost',
         user: 'postgres', 
-        password: '123456', 
+        password: process.env.PASS_KEY, 
         database: 'uni-simu', 
       },
       migrations: {
