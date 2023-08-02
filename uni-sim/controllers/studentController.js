@@ -1,9 +1,10 @@
 const axios = require('axios');
 const knex = require('knex')(require('../knexfile').development);
+const { STUDENTS_API_URL } = require('../utils/costants');
 
-exports.getStudents = async (req, res) => {
+const getStudents = async (req, res) => {
   try {
-    const response = await axios.get('https://randomuser.me/api', {
+    const response = await axios.get(STUDENTS_API_URL, {
       params: { results: 1000, inc: 'name' },
     });
     const students = response.data.results.map((student) => ({
@@ -16,3 +17,4 @@ exports.getStudents = async (req, res) => {
     res.status(500).json({ error: 'An error occurred while fetching students.' });
   }
 };
+module.exports = { getStudents };
