@@ -22,6 +22,54 @@ const getStudents = async (req, res) => {
   }
 };
 
+const addStudent = async (req, res) => {
+  try {
+    const { firstName, lastName } = req.body;
+    if (!firstName || !lastName) {
+      return res.status(400).json({ error: 'First name and last name are required.' });
+    }
+
+    const student = { name: `${firstName} ${lastName}` };
+    const insertedStudent = await knex('students').insert(student).returning('*');
+    return res.json(insertedStudent[0]);
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to add student.' });
+  }
+};
+
+const getStudentById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const student = await knex('students').where({ id }).first();
+
+    if (!student) {
+      return res.status(404).json({ error: 'Student not found.' });
+    }
+
+    return res.json(student);
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to fetch student.' });
+  }
+};
+
+const deleteStudent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedStudent = await knex('students').where({ id }).del();
+
+    if (!deletedStudent) {
+      return res.status(404).json({ error: 'Student not found.' });
+    }
+
+    return res.json({ message: 'Student deleted successfully.' });
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to delete student.' });
+  }
+};
+
 module.exports = {
+  deleteStudent,
+  getStudentById,
+  addStudent,
   getStudents,
 };
