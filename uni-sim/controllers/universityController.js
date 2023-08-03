@@ -4,25 +4,22 @@ const { UNIVERCITIES_API_URL } = require('../utils/costants');
 
 const getUniversities = async (req, res) => {
   try {
-    console.log('get uni starts');
+    const existingUniversities = await knex('universities').select();
 
-    const response = await axios.get(UNIVERCITIES_API_URL, {
-      params: { country: 'turkey' },
-    });
-
-    const universities = response.data.map((university) => ({
-      name: university.name,
-      country: university.country,
-    }));
-
-    await knex('universities').insert(universities);
-    res.json(universities);
+    if (existingUniversities.length > 0) {
+      res.json(existingUniversities);
+    } else {
+      const response = await axios.get(UNIVERCITIES_API_URL);
+      const universities = response.data;
+      await knex('universities').insert(universities);
+      res.json(universities);
+    }
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: 'An error occurred while fetching universities.' });
+    res.status(500).json({ error: 'Failed to fetch university data.' });
   }
 };
 
+module.exports = {
+  getUniversities,
+};
 // const writeuni = async () => {};
-
-module.exports = { getUniversities };
