@@ -65,7 +65,17 @@ const deleteUniversity = async (req, res) => {
   }
 };
 
+const deleteAllUniversities = async (req, res) => {
+  try {
+    await knex('universities').del();
+    return res.json({ message: 'All universities deleted successfully.' });
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to delete all universities.' });
+  }
+};
+
 module.exports = {
+  deleteAllUniversities,
   deleteUniversity,
   getUniversityById,
   getUniversities,
