@@ -67,7 +67,17 @@ const deleteStudent = async (req, res) => {
   }
 };
 
+const deleteAllStudents = async (req, res) => {
+  try {
+    await knex('students').del();
+    return res.json({ message: 'All students deleted successfully.' });
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to delete all students.' });
+  }
+};
+
 module.exports = {
+  deleteAllStudents,
   deleteStudent,
   getStudentById,
   addStudent,
