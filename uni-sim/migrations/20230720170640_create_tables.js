@@ -29,7 +29,6 @@ exports.up = function (knex) {
       table.increments('id').primary();
       table.integer('student_id').references('id').inTable('students');
       table.integer('university_id').references('id').inTable('universities');
-      table.integer('score');
     }),
   ]);
 };
