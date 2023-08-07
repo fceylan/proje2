@@ -2,6 +2,8 @@ const express = require('express');
 const universityRoutes = require('./routes/universityRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const examRoutes = require('./routes/examRoutes');
+const scoreRoutes = require('./routes/scoreRoutes');
+const placementRoutes = require('./routes/placementRoutes');
 
 const PORT = 3000;
 
@@ -15,6 +17,8 @@ app.get('/', (req, res) => {
 app.use('/universities', universityRoutes);
 app.use('/students', studentRoutes);
 app.use('/exams', examRoutes);
+app.use('/scores', scoreRoutes);
+app.use('/placements', placementRoutes);
 
 app.listen(PORT, async () => {
   try {

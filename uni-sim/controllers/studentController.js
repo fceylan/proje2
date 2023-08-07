@@ -4,21 +4,21 @@ const { STUDENTS_API_URL } = require('../utils/costants');
 
 const getStudents = async (req, res) => {
   try {
-    const existingStudents = await knex('students').select();
+    const existingStudents = await knex.raw('SELECT * FROM students');
 
     if (existingStudents.length > 0) {
-      res.json(existingStudents);
-    } else {
-      const response = await axios.get(STUDENTS_API_URL);
-      const students = response.data.results.map((result) => ({
-        name: `${result.name.first} ${result.name.last}`,
-      }));
-
-      await knex('students').insert(students);
-      res.json(students);
+      return res.json(existingStudents[0]);
     }
+    const response = await axios.get(STUDENTS_API_URL);
+    const students = response.data.results.map((result) => ({
+      first_name: result.name.first,
+      last_name: result.name.last,
+    }));
+
+    await knex.raw('INSERT INTO students (first_name, last_name) VALUES (:first_name, :last_name)', students);
+    return res.json(students);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch student data.' });
+    return res.status(500).json({ error: 'Failed to fetch students data.' });
   }
 };
 
@@ -30,7 +30,7 @@ const addStudent = async (req, res) => {
     }
 
     const student = { name: `${firstName} ${lastName}` };
-    const insertedStudent = await knex('students').insert(student).returning('*');
+    const insertedStudent = await knex.raw('INSERT INTO students (first_name, last_name) VALUES (:first_name, :last_name) RETURNING *', student);
     return res.json(insertedStudent[0]);
   } catch (error) {
     return res.status(500).json({ error: 'Failed to add student.' });
@@ -40,7 +40,7 @@ const addStudent = async (req, res) => {
 const getStudentById = async (req, res) => {
   try {
     const { id } = req.params;
-    const student = await knex('students').where({ id }).first();
+    const student = await knex.raw('SELECT * FROM students WHERE id = ?', [id]);
 
     if (!student) {
       return res.status(404).json({ error: 'Student not found.' });
@@ -55,7 +55,7 @@ const getStudentById = async (req, res) => {
 const deleteStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedStudent = await knex('students').where({ id }).del();
+    const deletedStudent = await knex.raw('DELETE FROM students WHERE id = ?', [id]);
 
     if (!deletedStudent) {
       return res.status(404).json({ error: 'Student not found.' });
@@ -69,7 +69,7 @@ const deleteStudent = async (req, res) => {
 
 const deleteAllStudents = async (req, res) => {
   try {
-    await knex('students').del();
+    await knex.raw('DELETE FROM students');
     return res.json({ message: 'All students deleted successfully.' });
   } catch (error) {
     return res.status(500).json({ error: 'Failed to delete all students.' });

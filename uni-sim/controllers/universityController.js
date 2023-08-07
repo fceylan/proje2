@@ -4,14 +4,17 @@ const { UNIVERCITIES_API_URL } = require('../utils/costants');
 
 const getUniversities = async (req, res) => {
   try {
-    const existingUniversities = await knex('universities').select();
+    const existingUniversities = await knex.raw('SELECT * FROM universities');
 
     if (existingUniversities.length > 0) {
       res.json(existingUniversities);
     } else {
       const response = await axios.get(UNIVERCITIES_API_URL);
       const universities = response.data;
-      await knex('universities').insert(universities);
+
+      universities.sort((a, b) => a.name.localeCompare(b.name));
+
+      await knex.raw('INSERT INTO universities (name, country) VALUES (:name, :country)', universities);
       res.json(universities);
     }
   } catch (error) {
@@ -27,7 +30,7 @@ const addUniversity = async (req, res) => {
     }
 
     const university = { name, country };
-    const insertedUniversity = await knex('universities').insert(university).returning('*');
+    const insertedUniversity = await knex.raw('INSERT INTO universities (name, country) VALUES (:name, :country) RETURNING *', university);
 
     return res.json(insertedUniversity[0]);
   } catch (error) {
@@ -38,13 +41,12 @@ const addUniversity = async (req, res) => {
 const getUniversityById = async (req, res) => {
   try {
     const { id } = req.params;
-    const university = await knex('universities').where({ id }).first();
-
+    const university = await knex.raw('SELECT * FROM universities WHERE id = ?', [id]);
     if (!university) {
       return res.status(404).json({ error: 'University not found.' });
     }
 
-    return res.json(university); // return anahtar kelimesini ekledik
+    return res.json(university);
   } catch (error) {
     return res.status(500).json({ error: 'Failed to fetch university.' });
   }
@@ -53,7 +55,7 @@ const getUniversityById = async (req, res) => {
 const deleteUniversity = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedUniversity = await knex('universities').where({ id }).del();
+    const deletedUniversity = await knex.raw('DELETE FROM universities WHERE id = ?', [id]);
 
     if (!deletedUniversity) {
       return res.status(404).json({ error: 'University not found.' });
@@ -67,7 +69,7 @@ const deleteUniversity = async (req, res) => {
 
 const deleteAllUniversities = async (req, res) => {
   try {
-    await knex('universities').del();
+    await knex.raw('DELETE FROM universities');
     return res.json({ message: 'All universities deleted successfully.' });
   } catch (error) {
     return res.status(500).json({ error: 'Failed to delete all universities.' });
