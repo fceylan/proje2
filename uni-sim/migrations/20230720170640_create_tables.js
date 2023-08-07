@@ -1,4 +1,3 @@
-/* eslint-disable linebreak-style */
 exports.up = function (knex) {
   return Promise.all([
     knex.schema.createTable('universities', (table) => {
