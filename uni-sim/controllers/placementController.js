@@ -2,7 +2,7 @@ const { knex } = require('../knexfile');
 
 const addPlacement = async (req, res) => {
   try {
-    const universities = await knex.raw('SELECT * FROM universities ORDER BY name ASC'); // Üniversiteleri alfabetik olarak sıralıyoruz
+    const universities = await knex.raw('SELECT * FROM universities ORDER BY name ASC');
     const universityRows = universities.rows;
 
     const placementPromises = universityRows.map(async (university) => {
