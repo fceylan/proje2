@@ -68,23 +68,7 @@ const deleteAllStudents = async (req, res) => {
   }
 };
 
-const getStudentScores = async () => {
-  try {
-    const query = `
-      SELECT students.first_name, students.last_name, scores.score
-      FROM students
-      LEFT JOIN scores ON students.id = scores.student_id
-      ORDER BY scores.score DESC;
-    `;
-    const result = await knex.raw(query);
-    return result.rows;
-  } catch (error) {
-    throw new Error('Failed to fetch student scores.');
-  }
-};
-
 module.exports = {
-  getStudentScores,
   initStudents,
   deleteAllStudents,
   getStudentById,
