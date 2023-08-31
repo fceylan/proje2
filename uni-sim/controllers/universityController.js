@@ -2,21 +2,30 @@ const axios = require('axios');
 const knex = require('knex')(require('../knexfile').development);
 const { UNIVERCITIES_API_URL } = require('../utils/costants');
 
-const getUniversities = async (req, res) => {
+const initUniversities = async () => {
   try {
     const existingUniversities = await knex.raw('SELECT * FROM universities');
 
-    if (existingUniversities.length > 0) {
-      res.json(existingUniversities);
-    } else {
+    if (existingUniversities.length === 0) {
       const response = await axios.get(UNIVERCITIES_API_URL);
-      const universities = response.data;
+      const universities = response.data.map((university) => ({
+        name: university.name,
+        country: university.country,
+      }));
 
       universities.sort((a, b) => a.name.localeCompare(b.name));
 
       await knex.raw('INSERT INTO universities (name, country) VALUES (:name, :country)', universities);
-      res.json(universities);
     }
+  } catch (error) {
+    console.error('Failed to initialize universities:', error);
+  }
+};
+
+const getUniversities = async (req, res) => {
+  try {
+    const universities = await knex.raw('SELECT * FROM universities');
+    res.json(universities);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch university data.' });
   }
@@ -77,6 +86,7 @@ const deleteAllUniversities = async (req, res) => {
 };
 
 module.exports = {
+  initUniversities,
   deleteAllUniversities,
   deleteUniversity,
   getUniversityById,

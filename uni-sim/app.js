@@ -2,11 +2,10 @@ const express = require('express');
 const universityRoutes = require('./routes/universityRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const examRoutes = require('./routes/examRoutes');
-const scoreRoutes = require('./routes/scoreRoutes');
-const placementRoutes = require('./routes/placementRoutes');
+const { initStudents } = require('./controllers/studentController');
+const { initUniversities } = require('./controllers/universityController');
 
 const PORT = 3000;
-
 const app = express();
 
 app.use(express.json());
@@ -17,13 +16,14 @@ app.get('/', (req, res) => {
 app.use('/universities', universityRoutes);
 app.use('/students', studentRoutes);
 app.use('/exams', examRoutes);
-app.use('/scores', scoreRoutes);
-app.use('/placements', placementRoutes);
 
 app.listen(PORT, async () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+
   try {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    await initStudents();
+    await initUniversities();
   } catch (error) {
-    console.log('Error migrating database:', error);
+    console.error('Failed to initialize data:', error);
   }
 });

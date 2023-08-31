@@ -1,51 +1,80 @@
 const { knex } = require('../knexfile');
+// const { getStudentScores } = require('./studentController');
+// const { getUniversities } = require('./universityController');
 
-const addPlacement = async (req, res) => {
+const processUniversity = async (university) => {
   try {
-    const universities = await knex.raw('SELECT * FROM universities ORDER BY name ASC');
-    const universityRows = universities.rows;
+    const studentsForUniversityQuery = `
+      SELECT id
+      FROM students
+      WHERE university_id IS NULL
+      ORDER BY score DESC
+      LIMIT 5;
+    `;
+    const studentsForUniversity = await knex.raw(studentsForUniversityQuery);
 
-    const placementPromises = universityRows.map(async (university) => {
-      const students = await knex.raw(
-        `
-        SELECT * FROM students
-        WHERE university_id IS NULL
-        ORDER BY score DESC
-        LIMIT 5
-        `,
-      );
+    const studentIds = studentsForUniversity.rows.map((student) => student.id).join(',');
 
-      const studentRows = students.rows;
-      const placementInsertPromises = studentRows.map(async (student) => {
-        await knex.raw(
-          `
-          INSERT INTO placement (student_id, university_id)
-          VALUES (?, ?)
-          `,
-          [student.id, university.id],
-        );
+    if (studentIds) {
+      const updateStudentsQuery = `
+        UPDATE students
+        SET university_id = ?
+        WHERE id IN (${studentIds});
+      `;
+      await knex.raw(updateStudentsQuery, [university.id]);
+    }
+  } catch (error) {
+    console.error('Error processing university:', error);
+  }
+};
 
-        await knex.raw(
-          `
-          UPDATE students
-          SET university_id = ?
-          WHERE id = ?
-          `,
-          [university.id, student.id],
-        );
-      });
+const addPlacement = async () => {
+  try {
+    const sortUniversitiesQuery = `
+      SELECT id
+      FROM universities
+      ORDER BY name ASC;
+    `;
+    const sortedUniversities = await knex.raw(sortUniversitiesQuery);
 
-      await Promise.all(placementInsertPromises);
+    const processPromises = sortedUniversities.rows.map(async (university) => {
+      await processUniversity(university);
     });
 
-    await Promise.all(placementPromises);
+    await Promise.all(processPromises);
 
-    return res.json({ message: 'Placement process completed successfully.' });
+    return 'Placement completed successfully.';
   } catch (error) {
-    return res.status(500).json({ error: 'Failed to complete placement process.' });
+    throw new Error('Failed to add placements.');
+  }
+};
+
+const getStudentPlacements = async () => {
+  try {
+    const query = `
+      SELECT students.first_name, students.last_name, universities.name AS university_name, scores.score
+      FROM students
+      LEFT JOIN scores ON students.id = scores.student_id
+      LEFT JOIN universities ON students.university_id = universities.id;
+    `;
+    const result = await knex.raw(query);
+
+    const placements = result.rows.map((row) => ({
+      firstName: row.first_name,
+      lastName: row.last_name,
+      universityName: row.university_name,
+      score: row.score,
+    }));
+
+    placements.forEach((placement) => {
+      console.log(`${placement.firstName} ${placement.lastName} - ${placement.universityName}: ${placement.score}`);
+    });
+  } catch (error) {
+    console.error('Error fetching student placements:', error);
   }
 };
 
 module.exports = {
+  getStudentPlacements,
   addPlacement,
 };

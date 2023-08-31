@@ -1,21 +1,34 @@
-const knex = require('knex')(require('../knexfile').development);
+const { knex } = require('../knexfile');
+const { getStudents } = require('./studentController');
+
+const assignRandomScore = () => Math.floor(Math.random() * 501);
 
 const startExam = async (req, res) => {
   try {
-    const { date } = req.query;
-    if (!date) {
-      return res.status(400).json({ error: 'Date parameter is required.' });
+    const students = await getStudents();
+
+    const examDate = new Date();
+
+    if (students.length === 0) {
+      return res.status(400).json({ error: 'No students found.' });
     }
 
-    const exam = await knex('exams').where({ date }).first();
+    const scores = students.map((student) => ({
+      student_id: student.id,
+      score: assignRandomScore(),
+    }));
 
-    if (!exam) {
-      return res.status(404).json({ error: 'Exam not found for the given date.' });
+    const insertedExam = await knex('exams').insert({ date: examDate });
+
+    if (insertedExam.length === 0) {
+      return res.status(500).json({ error: 'Failed to start exam.' });
     }
 
-    return res.json(exam);
+    await knex('scores').insert(scores);
+
+    return res.json({ message: 'Exam started and scores assigned.' });
   } catch (error) {
-    return res.status(500).json({ error: 'Failed to start the exam.' });
+    return res.status(500).json({ error: 'Failed to start exam and assign scores.' });
   }
 };
 

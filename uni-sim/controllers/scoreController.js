@@ -1,35 +1,36 @@
 const { knex } = require('../knexfile');
+const { getStudents } = require('./studentController');
 
 const getRandomScore = () => Math.floor(Math.random() * 501);
 
-const assignScore = async (req, res) => {
+const assignScores = async () => {
   try {
-    const { studentId, examId } = req.body;
+    const students = await getStudents();
 
-    if (!studentId || !examId) {
-      return res.status(400).json({ error: 'Student ID and exam ID are required.' });
+    if (students.length === 0) {
+      throw new Error('No students found.');
     }
 
-    const student = await knex.raw('SELECT * FROM students WHERE id = ?', [studentId]);
-    const exam = await knex.raw('SELECT * FROM exams WHERE id = ?', [examId]);
+    const scores = [];
+    students.forEach(async (student) => {
+      const score = getRandomScore();
 
-    if (!student.rows[0] || !exam.rows[0]) {
-      return res.status(404).json({ error: 'Student or exam not found.' });
-    }
+      const query = knex.raw(
+        'INSERT INTO scores (student_id, score) VALUES (?, ?) RETURNING *',
+        [student.id, score],
+      );
 
-    const score = getRandomScore();
+      const insertedScore = await query;
 
-    const insertedScore = await knex.raw(
-      'INSERT INTO scores (student_id, exam_id, score) VALUES (?, ?, ?) RETURNING *',
-      [studentId, examId, score],
-    );
+      scores.push(insertedScore.rows[0]);
+    });
 
-    return res.json(insertedScore.rows[0]);
+    return scores;
   } catch (error) {
-    return res.status(500).json({ error: 'Failed to assign score.' });
+    throw new Error('Failed to assign scores.');
   }
 };
 
 module.exports = {
-  assignScore,
+  assignScores,
 };

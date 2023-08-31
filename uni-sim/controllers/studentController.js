@@ -2,23 +2,30 @@ const axios = require('axios');
 const knex = require('knex')(require('../knexfile').development);
 const { STUDENTS_API_URL } = require('../utils/costants');
 
-const getStudents = async (req, res) => {
+const initStudents = async () => {
   try {
     const existingStudents = await knex.raw('SELECT * FROM students');
 
-    if (existingStudents.length > 0) {
-      return res.json(existingStudents[0]);
-    }
-    const response = await axios.get(STUDENTS_API_URL);
-    const students = response.data.results.map((result) => ({
-      first_name: result.name.first,
-      last_name: result.name.last,
-    }));
+    if (existingStudents.length === 0) {
+      const response = await axios.get(STUDENTS_API_URL);
+      const students = response.data.results.map((result) => ({
+        first_name: result.name.first,
+        last_name: result.name.last,
+      }));
 
-    await knex.raw('INSERT INTO students (first_name, last_name) VALUES (:first_name, :last_name)', students);
-    return res.json(students);
+      await knex.raw('INSERT INTO students (first_name, last_name) VALUES (:first_name, :last_name)', students);
+    }
   } catch (error) {
-    return res.status(500).json({ error: 'Failed to fetch students data.' });
+    console.error('Failed to initialize students:', error);
+  }
+};
+
+const getStudents = async (req, res) => {
+  try {
+    const students = await knex.raw('SELECT * FROM students');
+    res.json(students);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch student data.' });
   }
 };
 
@@ -52,21 +59,6 @@ const getStudentById = async (req, res) => {
   }
 };
 
-const deleteStudent = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const deletedStudent = await knex.raw('DELETE FROM students WHERE id = ?', [id]);
-
-    if (!deletedStudent) {
-      return res.status(404).json({ error: 'Student not found.' });
-    }
-
-    return res.json({ message: 'Student deleted successfully.' });
-  } catch (error) {
-    return res.status(500).json({ error: 'Failed to delete student.' });
-  }
-};
-
 const deleteAllStudents = async (req, res) => {
   try {
     await knex.raw('DELETE FROM students');
@@ -76,9 +68,25 @@ const deleteAllStudents = async (req, res) => {
   }
 };
 
+const getStudentScores = async () => {
+  try {
+    const query = `
+      SELECT students.first_name, students.last_name, scores.score
+      FROM students
+      LEFT JOIN scores ON students.id = scores.student_id
+      ORDER BY scores.score DESC;
+    `;
+    const result = await knex.raw(query);
+    return result.rows;
+  } catch (error) {
+    throw new Error('Failed to fetch student scores.');
+  }
+};
+
 module.exports = {
+  getStudentScores,
+  initStudents,
   deleteAllStudents,
-  deleteStudent,
   getStudentById,
   addStudent,
   getStudents,

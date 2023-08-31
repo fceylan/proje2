@@ -23,5 +23,7 @@ module.exports = {
   },
   rules: {
     'no-console': 0,
+    'generator-star-spacing': 'off',
+    'no-restricted-syntax': 'off',
   },
 };
