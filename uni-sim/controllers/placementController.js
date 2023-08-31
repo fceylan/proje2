@@ -5,8 +5,6 @@ const { knex } = require('../knexfile');
 
 const addPlacementForAllStudents = async () => {
   try {
-    const studentsPerUniversity = 5;
-
     const universitiesQuery = `
       SELECT id FROM universities ORDER BY name;
     `;
@@ -18,7 +16,7 @@ const addPlacementForAllStudents = async () => {
         FROM students
         WHERE university_id IS NULL
         ORDER BY score DESC
-        LIMIT ${studentsPerUniversity};
+        LIMIT 5;
       `;
       const studentsToPlace = await knex.raw(studentsToPlaceQuery);
 
