@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.send('deneme');
+  res.send('denemeye devam');
 });
 app.use('/universities', universityRoutes);
 app.use('/students', studentRoutes);

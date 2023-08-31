@@ -1,11 +1,10 @@
 const express = require('express');
 const {
-  getStudents, addStudent, getStudentById, deleteAllStudents, initStudents,
+  getStudents, addStudent, getStudentById, deleteAllStudents,
 } = require('../controllers/studentController');
 
 const router = express.Router();
 
-router.get('/initstudent', initStudents);
 router.get('/getstudent', getStudents);
 router.post('/poststudent', addStudent);
 router.get('/getstudent/:id', getStudentById);

@@ -4,7 +4,7 @@ const { UNIVERCITIES_API_URL } = require('../utils/costants');
 
 const initUniversities = async () => {
   try {
-    const existingUniversities = await knex.raw('SELECT * FROM universities');
+    const existingUniversities = await knex('universities').select();
 
     if (existingUniversities.length === 0) {
       const response = await axios.get(UNIVERCITIES_API_URL);
@@ -15,7 +15,7 @@ const initUniversities = async () => {
 
       universities.sort((a, b) => a.name.localeCompare(b.name));
 
-      await knex.raw('INSERT INTO universities (name, country) VALUES (:name, :country)', universities);
+      await knex('universities').insert(universities);
     }
   } catch (error) {
     console.error('Failed to initialize universities:', error);

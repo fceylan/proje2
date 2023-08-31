@@ -4,7 +4,7 @@ const { STUDENTS_API_URL } = require('../utils/costants');
 
 const initStudents = async () => {
   try {
-    const existingStudents = await knex.raw('SELECT * FROM students');
+    const existingStudents = await knex('students').select();
 
     if (existingStudents.length === 0) {
       const response = await axios.get(STUDENTS_API_URL);
@@ -13,7 +13,7 @@ const initStudents = async () => {
         last_name: result.name.last,
       }));
 
-      await knex.raw('INSERT INTO students (first_name, last_name) VALUES (:first_name, :last_name)', students);
+      await knex('students').insert(students);
     }
   } catch (error) {
     console.error('Failed to initialize students:', error);
