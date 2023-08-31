@@ -1,8 +1,10 @@
 const { knex } = require('../knexfile');
 const { getStudents } = require('./studentController');
+const { addPlacementForAllStudents } = require('./placementController');
 
 const assignRandomScore = () => Math.floor(Math.random() * 501);
 
+// stundetleri çekip 0-500 değer atıyor.
 const startExam = async (req, res) => {
   try {
     const students = await getStudents();
@@ -25,6 +27,7 @@ const startExam = async (req, res) => {
     }
 
     await knex('scores').insert(scores);
+    await addPlacementForAllStudents();
 
     return res.json({ message: 'Exam started and scores assigned.' });
   } catch (error) {
