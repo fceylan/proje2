@@ -1,53 +1,45 @@
+/* eslint-disable no-await-in-loop */
 const { knex } = require('../knexfile');
 // const { getStudentScores } = require('./studentController');
 // const { getUniversities } = require('./universityController');
 
-const processUniversity = async (university) => {
+const addPlacementForAllStudents = async () => {
   try {
-    const studentsForUniversityQuery = `
-      SELECT id
-      FROM students
-      WHERE university_id IS NULL
-      ORDER BY score DESC
-      LIMIT 5;
+    const studentsPerUniversity = 5;
+
+    const universitiesQuery = `
+      SELECT id FROM universities ORDER BY name;
     `;
-    const studentsForUniversity = await knex.raw(studentsForUniversityQuery);
+    const universities = await knex.raw(universitiesQuery);
 
-    const studentIds = studentsForUniversity.rows.map((student) => student.id).join(',');
+    for (const university of universities.rows) {
+      const studentsToPlaceQuery = `
+        SELECT id
+        FROM students
+        WHERE university_id IS NULL
+        ORDER BY score DESC
+        LIMIT ${studentsPerUniversity};
+      `;
+      const studentsToPlace = await knex.raw(studentsToPlaceQuery);
 
-    if (studentIds) {
+      const studentIds = studentsToPlace.rows.map((student) => student.id);
+
       const updateStudentsQuery = `
         UPDATE students
-        SET university_id = ?
-        WHERE id IN (${studentIds});
+        SET university_id = ${university.id}
+        WHERE id IN (${studentIds.join(', ')});
       `;
-      await knex.raw(updateStudentsQuery, [university.id]);
+      await knex.raw(updateStudentsQuery);
     }
-  } catch (error) {
-    console.error('Error processing university:', error);
-  }
-};
-
-const addPlacement = async () => {
-  try {
-    const sortUniversitiesQuery = `
-      SELECT id
-      FROM universities
-      ORDER BY name ASC;
-    `;
-    const sortedUniversities = await knex.raw(sortUniversitiesQuery);
-
-    const processPromises = sortedUniversities.rows.map(async (university) => {
-      await processUniversity(university);
-    });
-
-    await Promise.all(processPromises);
 
     return 'Placement completed successfully.';
   } catch (error) {
     throw new Error('Failed to add placements.');
   }
 };
+
+// Tüm öğrencileri yerleştir
+addPlacementForAllStudents();
 
 const getStudentPlacements = async () => {
   try {
@@ -75,6 +67,6 @@ const getStudentPlacements = async () => {
 };
 
 module.exports = {
+  addPlacementForAllStudents,
   getStudentPlacements,
-  addPlacement,
 };
