@@ -17,8 +17,6 @@ app.use('/universities', universityRoutes);
 app.use('/students', studentRoutes);
 app.use('/exams', examRoutes);
 
-ge;
-
 app.listen(PORT, async () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 
