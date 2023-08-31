@@ -34,12 +34,10 @@ const addPlacementForAllStudents = async () => {
 
     return 'Placement completed successfully.';
   } catch (error) {
+    console.error('Error:', error);
     throw new Error('Failed to add placements.');
   }
 };
-
-// Tüm öğrencileri yerleştir
-addPlacementForAllStudents();
 
 const getStudentPlacements = async () => {
   try {
