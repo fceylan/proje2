@@ -1,31 +1,33 @@
 /* eslint-disable no-await-in-loop */
+
 const knex = require('knex')(require('../knexfile').development);
 
 const addPlacementForAllStudents = async () => {
   try {
-    const universitiesQuery = `
+    // Tüm üniversiteleri alfabetik olarak sırala ve her birini sırayla al.
+    const universities = await knex.raw(`
       SELECT id FROM universities ORDER BY name;
-    `;
-    const universities = await knex.raw(universitiesQuery);
+    `);
 
     for (const university of universities.rows) {
-      const studentsToPlaceQuery = `
+      // Üniversiteye atanmamış ve en yüksek puan alan ilk 5 öğrenciyi al.
+      const studentsToPlace = await knex.raw(`
         SELECT id
-        FROM universities
+        FROM students
         WHERE university_id IS NULL
         ORDER BY score DESC
         LIMIT 5;
-      `;
-      const studentsToPlace = await knex.raw(studentsToPlaceQuery);
+      `);
 
+      // Öğrencileri bu üniversiteye yerleştir ve university_id'yi güncelle.
       const studentIds = studentsToPlace.rows.map((student) => student.id);
-
-      const updateStudentsQuery = `
-        UPDATE students
-        SET university_id = ${university.id}
-        WHERE id IN (${studentIds.join(', ')});
-      `;
-      await knex.raw(updateStudentsQuery);
+      if (studentIds.length > 0) {
+        await knex.raw(`
+          UPDATE students
+          SET university_id = ${university.id}
+          WHERE id IN (${studentIds.join(', ')});
+        `);
+      }
     }
 
     return 'Placement completed successfully.';
