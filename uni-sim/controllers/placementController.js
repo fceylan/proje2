@@ -1,7 +1,5 @@
 /* eslint-disable no-await-in-loop */
-const { knex } = require('../knexfile');
-// const { getStudentScores } = require('./studentController');
-// const { getUniversities } = require('./universityController');
+const knex = require('knex')(require('../knexfile').development);
 
 const addPlacementForAllStudents = async () => {
   try {
@@ -13,7 +11,7 @@ const addPlacementForAllStudents = async () => {
     for (const university of universities.rows) {
       const studentsToPlaceQuery = `
         SELECT id
-        FROM students
+        FROM universities
         WHERE university_id IS NULL
         ORDER BY score DESC
         LIMIT 5;
