@@ -1,4 +1,4 @@
-const { knex } = require('../knexfile');
+const knex = require('knex')(require('../knexfile').development);
 const { getStudents } = require('./studentController');
 const { addPlacementForAllStudents } = require('./placementController');
 
@@ -21,6 +21,7 @@ const startExam = async (req, res) => {
     }));
 
     const insertedExam = await knex('exams').insert({ date: examDate });
+    // const insertedExam = await knex.raw('INSERT INTO exams(date) VALUES($examDate)RETURNING *');
 
     if (insertedExam.length === 0) {
       return res.status(500).json({ error: 'Failed to start exam.' });
@@ -31,6 +32,7 @@ const startExam = async (req, res) => {
 
     return res.json({ message: 'Exam started and scores assigned.' });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({ error: 'Failed to start exam and assign scores.' });
   }
 };

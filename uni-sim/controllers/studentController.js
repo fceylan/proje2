@@ -20,13 +20,11 @@ const initStudents = async () => {
   }
 };
 
-const getStudents = async (req, res) => {
-  try {
-    const students = await knex.raw('SELECT * FROM students');
-    res.json(students);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch student data.' });
-  }
+const getStudents = async () => {
+  const students = await knex.raw('SELECT * FROM students');
+  // if legnht control
+  // hata varsa throw
+  return students.rows;
 };
 
 const addStudent = async (req, res) => {
